@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slideshow from folder</title>
+    <style media="screen">
+      html {
+        height: 100%;
+      }
+      body {
+        background-color: #000;
+        background-size: cover;
+        background-position: 50% 50%;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+
+    <script type="text/javascript">
+
+      function Slideshow(serverURL, element, interval) {
+        var s = this;
+
+        s.serverURL = serverURL ? serverURL : "slideshow.php";
+        s.element   = element   ? element   : document.body;
+        s.interval  = interval  ? interval  : 5;
+
+        s.init = function() {
+          s.updateImageList();
+        };
+
+        s.updateImageList = function() {
+          var xhr = new XMLHttpRequest();
+          xhr.responseType = "json";
+          xhr.addEventListener("load", s.handleImageListLoad);
+          xhr.open("GET", s.serverURL);
+          xhr.send();
+        };
+
+        s.handleImageListLoad = function(event) {
+          s.imageList = this.response;
+          s.start();
+        };
+
+        s.start = function() {
+          if(!s.playing) {
+            s.showRandomImage();
+            if(s.imageList.length > 1) {
+              s.playing = setInterval(
+                s.showRandomImage,
+                s.interval * 1000
+              );
+            }
+          }
+        };
+
+        s.stop = function() {
+          if(s.playing) {
+            clearInterval(s.playing);
+            s.playing = null;
+          }
+        };
+
+        s.showRandomImage = function() {
+          var random = s.getRandomImageIndex();
+
+          // prevent showing the same image twice in a row
+          while(s.isCurrentImage(random)) {
+            random = s.getRandomImageIndex();
+          }
+
+          s.showImage(random);
+        };
+
+        s.getRandomImageIndex = function() {
+          return Math.floor(
+            s.imageList.length * Math.random()
+          );
+        };
+
+        s.isCurrentImage = function(index) {
+          return s.element.style.backgroundImage.indexOf(
+            s.imageList[index]
+          ) >= 0;
+        };
+
+        s.showImage = function(index) {
+          s.element.style.backgroundImage =
+            "url(" + s.imageList[index] + ")";
+        };
+
+        s.init();
+
+        return s;
+      }
+
+      var slideshow = new Slideshow("images.php", document.body, 5);
+
+    </script>
+  </body>
+</html>
